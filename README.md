@@ -1,5 +1,5 @@
 
-# Project Setup & Build Guide (Backend - TypeScript + Express + ESModules)
+# Project Setup 
 
 This is a TypeScript-based Express backend project with ESModule support (`"type": "module"`). It uses `ts-node` for development and `tsc` for production builds.
 
