@@ -105,4 +105,3 @@ CLOUDINARY_API_SECRET=your-secret
 
 ---
 
-If you need setup instructions for Docker, Vercel, Render, etc., feel free to ask — I can extend this guide accordingly.
