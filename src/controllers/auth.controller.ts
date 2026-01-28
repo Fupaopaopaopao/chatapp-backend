@@ -1,8 +1,7 @@
-import { Request, Response } from "express";
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import { generateJWT } from "../lib/util.js";
-
+import cloudinary from "../lib/cloudinary.js";
 
 //写逻辑 保证try catch 包裹
 export const signup = async (req: any, res: any) => {
@@ -84,7 +83,41 @@ export const logout = (req: any, res: any) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
 export const updateProfile = async (req: any, res: any) => {
-  res.send("update profile route");
+  try{
+    const {profilePic} = req.body;
+    if(!profilePic){
+      return res.status(400).json({ message: "Profile picture is required." });
+    }
+    const result = await cloudinary.uploader.upload(profilePic)
+    const user = await User.findByIdAndUpdate(req.user._id, {profilePic: result.secure_url}, {new: true});
+
+    if(!user){
+      return res.status(400).json({ message: "User not found." });
+    }
+
+    res.status(200).json({
+      _id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      profilePic:user.profilePic,
+    });
+
+  }catch(error){
+    console.log(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+export const checkAuth = async (req: any, res: any) => {
+  try{
+    res.status(200).json({
+      _id: req.user._id,
+      fullName: req.user.fullName,
+      email: req.user.email,
+      profilePic: req.user.profilePic,
+    });
+  }catch(error){
+    console.log(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
 };

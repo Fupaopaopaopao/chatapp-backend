@@ -17,6 +17,7 @@ export const protectRouter = async (req: any, res: any, next: any) => {
     if(!user){
         return res.status(401).json({ message: "User not found." });
     }
+    //作为中间件，把user信息挂载到req对象上，方便后续使用
     req.user = user;
     next();
     }catch(error){
