@@ -2,25 +2,30 @@ import { Request, Response } from "express";
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import { generateJWT } from "../lib/util.js";
-import { profile } from "console";
 
+
+//写逻辑 保证try catch 包裹
 export const signup = async (req: any, res: any) => {
+  //我们使用 express.json() 来解析请求体 所以req.body 是已经解析好的对象
   const { fullName, email, password } = req.body;
   try {
-    if (password < 6) {
+    if (!fullName || !email || !password) {
+      return res.status(400).json({ message: "All fields are required." });
+    }
+    if (password.length < 6) {
       return res
         .status(400)
         .json({ message: "Password must be at least 6 characters." });
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }); //await 等待findOne执行完成
 
     if (user) {
       return res.status(400).json({ message: "Email already existed." });
     }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashPassword = await bcrypt.hash(password, salt);
+    const salt = await bcrypt.genSalt(10); //生成随机盐
+    const hashPassword = await bcrypt.hash(password, salt); //加密密码
 
     // create new user
     const newUser = new User({
@@ -30,7 +35,7 @@ export const signup = async (req: any, res: any) => {
     });
 
     if (newUser) {
-      generateJWT(newUser._id, res);
+      generateJWT(newUser._id, res); //生成jwt
       await newUser.save();
 
       res.status(201).json({
@@ -42,11 +47,40 @@ export const signup = async (req: any, res: any) => {
     } else {
       return res.status(400).json({ message: "Invalid User Data" });
     }
-  } catch (error) {}
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
 };
-export const login = (req: Request, res: Response) => {
-  res.send("login route");
+export const login = async (req: any, res: any) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+    if(!user){
+      return res.status(400).json({ message: "User not found." });
+    }
+    const isMatch = await bcrypt.compare(password, user.password);
+    if(!isMatch){
+      return res.status(400).json({ message: "Invalid password." });
+    }
+    generateJWT(user._id, res);
+    res.status(200).json({
+      _id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      profilePic: user.profilePic,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
 };
-export const logout = (req: Request, res: Response) => {
-  res.send("logout route");
+export const logout = (req: any, res: any) => {
+  try {
+    res.cookie("jwt", "", { maxAge: 0 });
+    res.status(200).json({ message: "Logged out successfully." });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
 };

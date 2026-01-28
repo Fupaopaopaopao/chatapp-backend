@@ -25,4 +25,5 @@ const userSchema = new mongoose.Schema(
 );
 
 const User = mongoose.model("User",userSchema);
+//模型名字开头大写 单数形式 和数据库集合名一致
 export default User;
